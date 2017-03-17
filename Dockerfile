@@ -3,6 +3,7 @@ FROM ailispaw/ubuntu-essential:14.04-nodoc
 RUN apt-get -y update \
   && apt-get install -y \
     wget \
+    git \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
