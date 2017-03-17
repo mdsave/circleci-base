@@ -1,7 +1,7 @@
 FROM ailispaw/ubuntu-essential:14.04-nodoc
 
 RUN apt-get -y update \
-  && apt-get install -y \
+  && apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
     git \
@@ -10,8 +10,8 @@ RUN apt-get -y update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-RUN sudo add-apt-repository \
+RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+RUN add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
    $(lsb_release -cs) \
    stable"
