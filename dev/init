@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd $HOME/circleci-base
+
+# Install the latest docker
+if ! docker --version | grep -q 1.13.1 
+  then sudo DOCKER_STORAGE="overlay2" /etc/init.d/docker restart 1.13.1 
+fi
+
+# Build the image
+docker build .

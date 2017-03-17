@@ -1,0 +1,1 @@
+{"nfs":{"/home/bargee/circleci-base":{"type":"nfs","mount_options":["nolock","vers=3","udp","noatime","actimeo=1"],"guestpath":"/home/bargee/circleci-base","hostpath":"/Users/ryan/Documents/MDSave/code/circleci-base","disabled":false,"__vagrantfile":true,"map_uid":501,"map_gid":20,"nfs_udp":true,"nfs_version":3,"uuid":"3296753606"}}}
