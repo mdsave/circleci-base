@@ -5,6 +5,7 @@ RUN apt-get -y update \
     apt-transport-https \
     ca-certificates \
     git \
+    ssh \
     software-properties-common \
     wget \
   && apt-get clean \
