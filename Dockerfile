@@ -6,6 +6,7 @@ RUN apt-get -y update \
     ca-certificates \
     git \
     gzip \
+    pip \
     ssh \
     software-properties-common \
     wget \
@@ -25,3 +26,5 @@ RUN apt-get -y update \
 
 RUN wget -nv -O /usr/bin/docker-compose "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)"
 RUN chmod a+x /usr/bin/docker-compose
+
+RUN pip install docker-hub
