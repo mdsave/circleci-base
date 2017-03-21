@@ -6,7 +6,7 @@ RUN apt-get -y update \
     ca-certificates \
     git \
     gzip \
-    pip \
+    python-pip \
     ssh \
     software-properties-common \
     wget \
