@@ -9,6 +9,7 @@ RUN apt-get -y update \
     ssh \
     software-properties-common \
     wget \
+    jq \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
