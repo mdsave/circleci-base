@@ -10,6 +10,7 @@ RUN apt-get -y update \
     software-properties-common \
     wget \
     jq \
+    curl \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
