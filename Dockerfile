@@ -46,5 +46,7 @@ RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
   && ./configure \
   && make \
   && make install \
-  && cd / && gem install bundler \
+  && cd / \
   && rm -rf ruby-2.4.0*
+
+RUN gem install aptible-cli:0.8.4 tracker_api
