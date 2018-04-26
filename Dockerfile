@@ -49,4 +49,4 @@ RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
   && cd / \
   && rm -rf ruby-2.4.0*
 
-RUN gem install aptible-cli:0.14.0 tracker_api
+RUN gem install aptible-cli:0.15.2 tracker_api
