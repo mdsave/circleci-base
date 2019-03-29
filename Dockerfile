@@ -48,5 +48,10 @@ RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
   && make install \
   && cd / \
   && rm -rf ruby-2.4.0*
+  && curl -sL https://deb.nodesource.com/setup_8.x | bash - \
+  && apt-get install -y nodejs
 
-RUN gem install aptible-cli:0.15.2 tracker_api
+RUN gem install aptible-cli:0.15.2
+RUN npm install \
+        jira-connector \
+        shelljs
