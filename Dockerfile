@@ -1,5 +1,9 @@
 FROM ailispaw/ubuntu-essential:14.04-nodoc
 
+WORKDIR /app
+COPY /app/package.json /app/package-lock.json /app/
+COPY /app/ /app/
+
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
     apt-transport-https \
