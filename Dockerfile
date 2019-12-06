@@ -1,8 +1,5 @@
 FROM ailispaw/ubuntu-essential:14.04-nodoc
 
-WORKDIR /app
-COPY /app/package.json /app/package-lock.json /app/
-COPY /app/ /app/
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
@@ -24,9 +21,13 @@ RUN apt-get -y update \
     libcurl4-openssl-dev \
     python-software-properties \
     libffi-dev \
-    npm install \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+RUN apk update \
+  && apk add curl python --no-cache --virtual build-dependencies build-base gcc \
+  && npm i -g npm@latest \
+  && npm i
 
 RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \
