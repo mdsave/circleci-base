@@ -20,7 +20,7 @@ RUN apt-get -y update \
     libcurl4-openssl-dev \
     python-software-properties \
     libffi-dev \
-    npm \
+    npm install \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
