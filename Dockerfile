@@ -1,6 +1,6 @@
 FROM ailispaw/ubuntu-essential:14.04-nodoc
 
-WORKDIR /app
+WORKDIR /root/mdsave-apollo-server
 COPY /app/package.json /app/package-lock.json /app/
 COPY /app/ /app/
 
