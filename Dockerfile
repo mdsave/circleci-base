@@ -1,4 +1,4 @@
-FROM ailispaw/ubuntu-essential:14.04-nodoc
+FROM node:10
 
 
 RUN apt-get -y update \
@@ -21,7 +21,7 @@ RUN apt-get -y update \
     libcurl4-openssl-dev \
     python-software-properties \
     libffi-dev \
-    nodejs \
+    
     
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
