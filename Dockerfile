@@ -18,13 +18,17 @@ RUN apt-get -y update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+
+
 RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
    $(lsb_release -cs) \
    stable"
 
+RUN ln -s /usr/bin/nodejs /usr/bin/node
 RUN npm install --save-dev cross-env
+
 
 RUN apt-get -y update \
   && apt-get install -y docker-ce \
