@@ -1,4 +1,4 @@
-FROM node:10
+FROM node:12.13.0-alpine
 
 RUN apk update \
   && npm i -g npm@latest \
