@@ -1,8 +1,4 @@
-FROM node:12.13.0-alpine
-
-RUN apk update \
-  && npm i -g npm@latest \
-  && npm i
+FROM ailispaw/ubuntu-essential:14.04-nodoc
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
@@ -15,20 +11,26 @@ RUN apt-get -y update \
     wget \
     jq \
     curl \
+    zlib1g-dev \
+    build-essential \
+    libssl-dev \
+    libreadline-dev \
+    libyaml-dev \
+    libsqlite3-dev \
+    sqlite3 \
+    libxml2-dev \
+    libxslt1-dev \
+    libcurl4-openssl-dev \
+    python-software-properties \
+    libffi-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-
-
 
 RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
    $(lsb_release -cs) \
    stable"
-
-RUN ln -s /usr/bin/nodejs /usr/bin/node
-RUN npm install --save-dev cross-env
-
 
 RUN apt-get -y update \
   && apt-get install -y docker-ce \
