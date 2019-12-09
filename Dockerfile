@@ -1,4 +1,4 @@
-FROM ailispaw/ubuntu-essential:14.04-nodoc
+FROM node:12.13.0-alpine
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
