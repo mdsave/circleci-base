@@ -1,5 +1,9 @@
 FROM node:10
 
+RUN apk update \
+  && npm i -g npm@latest \
+  && npm i
+
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
     apt-transport-https \
@@ -11,24 +15,8 @@ RUN apt-get -y update \
     wget \
     jq \
     curl \
-    zlib1g-dev \
-    build-essential \
-    libssl-dev \
-    libreadline-dev \
-    libyaml-dev \
-    libsqlite3-dev \
-    libcurl4-openssl-dev \
-    python-software-properties \
-    libffi-dev \
-    
-    
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-
-RUN apk update \
-  && apk add curl python --no-cache --virtual build-dependencies build-base gcc \
-  && npm i -g npm@latest \
-  && npm i
 
 RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \
@@ -37,8 +25,6 @@ RUN add-apt-repository \
    stable"
 
 RUN npm install --save-dev cross-env
-
-
 
 RUN apt-get -y update \
   && apt-get install -y docker-ce \
