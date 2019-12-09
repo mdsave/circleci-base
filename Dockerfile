@@ -1,4 +1,4 @@
-FROM node:12.13.0-alpine
+FROM node:10
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
