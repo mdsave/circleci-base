@@ -1,4 +1,4 @@
-FROM node:10
+FROM circleci/node:latest
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
@@ -31,6 +31,7 @@ RUN chmod a+x /usr/bin/docker-compose
 
 RUN npm install -g cross-env
 RUN npm install -g jest
+RUN npm install -g graphql
 
 RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
   && tar -xzvf ruby-2.4.0.tar.gz \
