@@ -23,6 +23,8 @@ RUN apt-get -y update \
     libcurl4-openssl-dev \
     python-software-properties \
     libffi-dev \ 
+    unzip \
+    less \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -53,3 +55,13 @@ RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
 
 RUN gem install aptible-cli:0.16.3
 RUN npm install jira-connector shelljs
+
+# install jq 1.5
+RUN wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 \
+    && chmod +x jq-linux64 \
+    && mv jq-linux64 $(which jq)
+
+# install aws cli
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install
