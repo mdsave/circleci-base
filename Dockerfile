@@ -65,3 +65,9 @@ RUN wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 \
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install
+
+# install postgresql 11
+RUN add-apt-repository 'deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main'
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+RUN apt-get update && apt-get update
+RUN apt-get -y install postgresql-11
