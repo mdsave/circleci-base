@@ -1,4 +1,4 @@
-FROM ailispaw/ubuntu-essential:14.04-nodoc
+FROM ubuntu:20.04
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
