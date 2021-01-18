@@ -21,7 +21,6 @@ RUN apt-get -y update \
     libxml2-dev \
     libxslt1-dev \
     libcurl4-openssl-dev \
-    python-software-properties \
     libffi-dev \ 
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
