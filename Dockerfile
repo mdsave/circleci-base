@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ailispaw/ubuntu-essential:14.04-nodoc
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
@@ -21,6 +21,7 @@ RUN apt-get -y update \
     libxml2-dev \
     libxslt1-dev \
     libcurl4-openssl-dev \
+    python-software-properties \
     libffi-dev \ 
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
