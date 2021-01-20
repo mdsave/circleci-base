@@ -1,7 +1,11 @@
-FROM ailispaw/ubuntu-essential:14.04-nodoc
+FROM ubuntu:20.04
+
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
+    gpg-agent \
     apt-transport-https \
     ca-certificates \
     git \
@@ -21,7 +25,6 @@ RUN apt-get -y update \
     libxml2-dev \
     libxslt1-dev \
     libcurl4-openssl-dev \
-    python-software-properties \
     libffi-dev \ 
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
