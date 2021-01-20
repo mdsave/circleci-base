@@ -69,11 +69,11 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     && unzip awscliv2.zip \
     && ./aws/install
 
-# install postgresql 11
-RUN add-apt-repository 'deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main' \
-    && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && apt-get update && apt-get update \
-    && apt-get -y install postgresql-11
+# # install postgresql 11
+# RUN add-apt-repository 'deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main' \
+#     && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+#     && apt-get update && apt-get update \
+#     && apt-get -y install postgresql-11
 
 # install OpenSSH 7.4 (needed by aptible-cli to tunnel)
 RUN wget "https://fastly.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-7.4p1.tar.gz" \
