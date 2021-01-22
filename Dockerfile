@@ -53,8 +53,7 @@ RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
   && make install \
   && cd / \
   && rm -rf ruby-2.4.0* \
-  && curl -sL https://deb.nodesource.com/setup_14.x | bash - \
-  && apt-get install -y nodejs
+  
 
 RUN gem install aptible-cli:0.16.3
 RUN npm install jira-connector shelljs
@@ -70,7 +69,7 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     && ./aws/install
 
 
-# install OpenSSH 7.4 (needed by aptible-cli to tunnel)
+# install OpenSSH 8.4 (needed by aptible-cli to tunnel)
 RUN wget "https://fastly.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.4p1.tar.gz" \
     && tar xfz openssh-8.4p1.tar.gz \
     && cd openssh-8.4p1 \
