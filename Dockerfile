@@ -22,7 +22,8 @@ RUN apt-get -y update \
     libxslt1-dev \
     libcurl4-openssl-dev \
     python-software-properties \
-    libffi-dev \ 
+    libffi-dev \
+    openssh-client \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -49,4 +50,4 @@ RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
   && cd / \
   && rm -rf ruby-2.4.0*
 
-RUN gem install aptible-cli:0.14.0 tracker_api
+RUN gem install aptible-cli:0.19.6 tracker_api
