@@ -28,6 +28,8 @@ RUN apt-get -y update \
     libffi-dev \
     unzip \
     less \
+    ruby-full \
+    rubygems \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -45,15 +47,7 @@ RUN apt-get -y update \
 RUN wget -nv -O /usr/bin/docker-compose "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)"
 RUN chmod a+x /usr/bin/docker-compose
 
-RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
-  && tar -xzvf ruby-2.4.0.tar.gz \
-  && cd ruby-2.4.0/ \
-  && ./configure \
-  && make \
-  && make install \
-  && cd / \
-  && rm -rf ruby-2.4.0* \
-  && curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
   && apt-get install -y nodejs
 
 RUN gem install aptible-cli:0.16.3
