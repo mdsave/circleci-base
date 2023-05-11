@@ -64,10 +64,10 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     && ./aws/install
 
 
-# install OpenSSH 8.4 (needed by aptible-cli to tunnel)
-RUN wget "https://fastly.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.4p1.tar.gz" \
-    && tar xfz openssh-8.4p1.tar.gz \
-    && cd openssh-8.4p1 \
+# install OpenSSH 9.3 (needed by aptible-cli to tunnel)
+RUN wget "https://fastly.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.3p1.tar.gz" \
+    && tar xfz openssh-9.3p1.tar.gz \
+    && cd openssh-9.3p1 \
     && ./configure \
     && make \
     && make install \
