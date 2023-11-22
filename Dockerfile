@@ -65,7 +65,7 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 
 # install OpenSSH 9.3 (needed by aptible-cli to tunnel)
-RUN wget "https://fastly.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.3p1.tar.gz" \
+RUN wget "https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.3p1.tar.gz" \
     && tar xfz openssh-9.3p1.tar.gz \
     && cd openssh-9.3p1 \
     && ./configure \
