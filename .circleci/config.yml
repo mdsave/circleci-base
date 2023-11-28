@@ -1,0 +1,28 @@
+version: 2.1
+
+executors:
+  base-config:
+    docker:
+      - image: cimg/node:20.7.0
+    working_directory: ~/docker-base
+    environment:
+      BASH_ENV: ~/.env
+jobs:
+  deploy-to-ecr:
+    executor: base-config
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: 'Install aws'
+          command: .circleci/install-aws-cli
+      - run:
+          name: 'Configure environment'
+          command: .circleci/configure-env
+      - deploy:
+          name: 'Setup and push to deploy'
+          command: .circleci/deploy
+workflows:
+  Docker Base Workflow:
+    jobs:
+      - deploy-to-ecr

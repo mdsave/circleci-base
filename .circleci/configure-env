@@ -1,0 +1,54 @@
+#!/bin/bash
+set -e # Exit on any error
+
+if [[ -z $DEPLOY_ENVIRONMENT ]]; then
+  if [[ $CIRCLE_BRANCH == "master" ]]; then
+    DEPLOY_ENVIRONMENT="master"
+  elif [[ $CIRCLE_BRANCH =~ ^(redox|demo)$ ]]; then
+    DEPLOY_ENVIRONMENT="staging"
+  else
+    DEPLOY_ENVIRONMENT="development"
+  fi
+fi
+
+# if DEPLOY* credentials are not already set, use environment variables set by circleci according to environment
+if [[ -z $DEPLOY_AWS_ACCESS_ID || -z $DEPLOY_AWS_SECRET_ACCESS_KEY  ]]; then
+  ENV_UPPER=$(echo $DEPLOY_ENVIRONMENT | tr '[:lower:]' '[:upper:]')
+  AWS_ACCESS_ID_VAR_NAME=$ENV_UPPER\_DEPLOY\_AWS\_ACCESS\_ID
+  AWS_SECRET_ACCESS_KEY_VAR_NAME=$ENV_UPPER\_DEPLOY\_AWS\_SECRET\_ACCESS\_KEY
+
+  # error if variables are not set for that environment
+  if [[ -z ${!AWS_ACCESS_ID_VAR_NAME} ]]; then
+    echo "Could not find a value for $AWS_ACCESS_ID_VAR_NAME for environment $DEPLOY_ENVIRONMENT"
+    exit 1
+  elif [[ -z ${!AWS_SECRET_ACCESS_KEY_VAR_NAME} ]]; then
+    echo "Could not find a value for $AWS_SECRET_ACCESS_KEY_VAR_NAME for environment $DEPLOY_ENVIRONMENT"
+    exit 1
+  fi
+
+  DEPLOY_AWS_ACCESS_ID=${!AWS_ACCESS_ID_VAR_NAME}
+  DEPLOY_AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_VAR_NAME}
+fi
+
+# secret name depends on the environment e.g. "master/env-secrets"
+AWS_SECRET_NAME="$DEPLOY_ENVIRONMENT/env-secrets"
+AWS_DEFAULT_REGION='us-east-1'
+
+echo "Retrieving Secrets from $AWS_SECRET_NAME"
+
+# retrieve secrets blob using the aws secretsmanager
+AWS_SECRET_OUTPUT=$( \
+  AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION \
+  AWS_ACCESS_KEY_ID=$DEPLOY_AWS_ACCESS_ID \
+  AWS_SECRET_ACCESS_KEY=$DEPLOY_AWS_SECRET_ACCESS_KEY \
+  aws secretsmanager get-secret-value --secret-id $AWS_SECRET_NAME \
+)
+
+# convert to json (unescapes special characters)
+AWS_SECRETS_RAW=$(echo $AWS_SECRET_OUTPUT | jq '.["SecretString"] | fromjson')
+
+# export all secret variables to .env file to be used in the build and deploy processes
+echo $AWS_SECRETS_RAW | jq -r 'keys[] as $k | "export \($k)=\(.[$k])"' >> ~/.env
+
+echo "export DEPLOY_AWS_ACCESS_ID='$DEPLOY_AWS_ACCESS_ID' \n" >> ~/.env
+echo "export DEPLOY_AWS_SECRET_ACCESS_KEY='$DEPLOY_AWS_SECRET_ACCESS_KEY' \n" >> ~/.env
