@@ -7,6 +7,5 @@ aws configure set region us-east-1
 
 aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
 
-
-docker buildx create --use
-docker buildx build --platform linux/amd64,linux/arm64 -t public.ecr.aws/g8w4z0q4/circleci-base:"$CIRCLE_BRANCH" --push .
+docker build -t public.ecr.aws/g8w4z0q4/circleci-base:"$CIRCLE_BRANCH" .
+docker push public.ecr.aws/g8w4z0q4/circleci-base:"$CIRCLE_BRANCH"
