@@ -3,7 +3,7 @@ version: 2.1
 executors:
   base-config:
     docker:
-      - image: alpine:3.14
+      - image: cimg/node:20.7.0
     working_directory: ~/circleci-base
     environment:
       BASH_ENV: ~/.env
