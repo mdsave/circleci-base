@@ -1,7 +1,11 @@
-FROM ailispaw/ubuntu-essential:14.04-nodoc
+FROM ubuntu:20.04
+
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
+    gpg-agent \
     apt-transport-https \
     ca-certificates \
     git \
@@ -21,8 +25,9 @@ RUN apt-get -y update \
     libxml2-dev \
     libxslt1-dev \
     libcurl4-openssl-dev \
-    python-software-properties \
-    libffi-dev \ 
+    libffi-dev \
+    unzip \
+    less \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -47,6 +52,29 @@ RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
   && make \
   && make install \
   && cd / \
-  && rm -rf ruby-2.4.0*
+  && rm -rf ruby-2.4.0* \
+  && curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+  && apt-get install -y nodejs
 
-RUN gem install aptible-cli:0.14.0 tracker_api
+RUN gem install aptible-cli:0.16.3
+RUN npm install jira-connector shelljs
+
+# install jq 1.5
+RUN wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 \
+    && chmod +x jq-linux64 \
+    && mv jq-linux64 $(which jq)
+
+# install aws cli
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install
+
+
+# install OpenSSH 8.4 (needed by aptible-cli to tunnel)
+RUN wget "https://fastly.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.4p1.tar.gz" \
+    && tar xfz openssh-8.4p1.tar.gz \
+    && cd openssh-8.4p1 \
+    && ./configure \
+    && make \
+    && make install \
+    && service ssh restart
