@@ -47,7 +47,7 @@ RUN apt-get -y update \
 RUN wget -nv -O /usr/bin/docker-compose "https://github.com/docker/compose/releases/download/2.37.0/docker-compose-$(uname -s)-$(uname -m)"
 RUN chmod a+x /usr/bin/docker-compose
 
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install -y nodejs
 
 
