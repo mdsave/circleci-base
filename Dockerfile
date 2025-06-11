@@ -58,9 +58,6 @@ RUN apt-get -y update \
     && dpkg -i aptible-cli.deb \
     && rm -f aptible-cli.deb
 
-
-RUN npm install jira.js shelljs
-
 # install jq 1.5
 RUN wget https://github.com/stedolan/jq/releases/download/jq-1.8.0/jq-linux64 \
     && chmod +x jq-linux64 \
