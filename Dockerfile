@@ -44,7 +44,7 @@ RUN apt-get -y update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN wget -nv -O /usr/bin/docker-compose "https://github.com/docker/compose/releases/download/2.37.0/docker-compose-$(uname -s)-$(uname -m)"
+RUN wget -nv -O /usr/bin/docker-compose "https://github.com/docker/compose/releases/download/v2.37.0/docker-compose-linux-x86_64"
 RUN chmod a+x /usr/bin/docker-compose
 
 RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - \
