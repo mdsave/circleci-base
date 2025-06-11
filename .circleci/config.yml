@@ -19,7 +19,7 @@ jobs:
       - run:
           name: 'Configure environment'
           command: .circleci/configure-env
-      - deploy:
+      - run:
           name: 'Setup and push to deploy'
           command: .circleci/deploy
 workflows:
