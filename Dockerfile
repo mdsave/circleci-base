@@ -2,6 +2,7 @@ FROM ubuntu:22.04
 
 ENV TZ=America/Los_Angeles
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+ENV RUBY_VERSION=3.4.4
 
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
@@ -28,10 +29,19 @@ RUN apt-get -y update \
     libffi-dev \
     unzip \
     less \
-    ruby-full \
-    rubygems \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+# Install Ruby from source
+RUN curl -fsSL https://cache.ruby-lang.org/pub/ruby/3.4/ruby-${RUBY_VERSION}.tar.gz -o ruby.tar.gz \
+    && tar -xzf ruby.tar.gz \
+    && cd ruby-${RUBY_VERSION} \
+    && ./configure --disable-install-doc \
+    && make -j"$(nproc)" \
+    && make install \
+    && cd .. \
+    && rm -rf ruby* \
+    && gem update --system
 
 RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \
