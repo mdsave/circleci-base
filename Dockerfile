@@ -44,17 +44,25 @@ RUN apt-get -y update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN wget -nv -O /usr/bin/docker-compose "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)"
+RUN wget -nv -O /usr/bin/docker-compose "https://github.com/docker/compose/releases/download/2.37.0/docker-compose-$(uname -s)-$(uname -m)"
 RUN chmod a+x /usr/bin/docker-compose
 
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
   && apt-get install -y nodejs
 
-RUN gem install aptible-cli:0.19.6
+
+# Install Aptible cli
+ENV URL="https://omnibus-aptible-toolbelt.s3.amazonaws.com/aptible/omnibus-aptible-toolbelt/latest/aptible-toolbelt_latest_ubuntu-1604_amd64.deb"
+RUN apt-get -y update \
+    && curl -o aptible-cli.deb "$URL" \
+    && dpkg -i aptible-cli.deb \
+    && rm -f aptible-cli.deb
+
+
 RUN npm install jira-connector shelljs
 
 # install jq 1.5
-RUN wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 \
+RUN wget https://github.com/stedolan/jq/releases/download/jq-1.8.0/jq-linux64 \
     && chmod +x jq-linux64 \
     && mv jq-linux64 $(which jq)
 
@@ -62,13 +70,3 @@ RUN wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 \
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install
-
-
-# install OpenSSH 9.3 (needed by aptible-cli to tunnel)
-RUN wget "https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.3p1.tar.gz" \
-    && tar xfz openssh-9.3p1.tar.gz \
-    && cd openssh-9.3p1 \
-    && ./configure \
-    && make \
-    && make install \
-    && service ssh restart
