@@ -59,7 +59,7 @@ RUN apt-get -y update \
     && rm -f aptible-cli.deb
 
 
-RUN npm install jira-connector shelljs
+RUN npm install jira.js shelljs
 
 # install jq 1.5
 RUN wget https://github.com/stedolan/jq/releases/download/jq-1.8.0/jq-linux64 \
