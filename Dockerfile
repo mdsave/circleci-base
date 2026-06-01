@@ -50,7 +50,8 @@ RUN chmod a+x /usr/bin/docker-compose
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
   && apt-get install -y nodejs
 
-RUN gem install aptible-cli:0.19.6
+RUN gem install bigdecimal:1.4.4 --no-document && \
+    gem install aptible-cli:0.26.6 --no-document
 RUN npm install jira-connector shelljs
 
 # install jq 1.5
