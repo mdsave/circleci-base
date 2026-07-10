@@ -49,17 +49,13 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable"
 
+# CI runs against a remote daemon (setup_remote_docker), so only the client +
+# buildx (for DOCKER_BUILDKIT builds with --secret/--cache-from) + the compose
+# v2 plugin (`docker compose`) are needed — not the full docker-ce engine.
 RUN apt-get -y update \
-  && apt-get install -y docker-ce \
+  && apt-get install -y docker-ce-cli docker-buildx-plugin docker-compose-plugin \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-
-RUN wget -nv -O /usr/bin/docker-compose "https://github.com/docker/compose/releases/download/v2.37.0/docker-compose-linux-x86_64"
-RUN chmod a+x /usr/bin/docker-compose
-
-RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - \
-  && apt-get install -y nodejs
-
 
 # Install Aptible cli
 ENV URL="https://omnibus-aptible-toolbelt.s3.amazonaws.com/aptible/omnibus-aptible-toolbelt/latest/aptible-toolbelt_latest_ubuntu-1604_amd64.deb"
@@ -76,7 +72,5 @@ RUN wget https://github.com/stedolan/jq/releases/download/jq-1.8.0/jq-linux64 \
 # install aws cli
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
-    && ./aws/install
-
-# install apollo
-RUN npm install -g apollo
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws
