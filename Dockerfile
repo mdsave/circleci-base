@@ -2,8 +2,12 @@ FROM ubuntu:24.04
 
 ENV TZ=America/Los_Angeles
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-ENV RUBY_VERSION=3.4.4
 
+# NOTE: no Ruby toolchain here. aptible-cli ships its own embedded Ruby (omnibus
+# .deb, /opt/aptible-toolbelt/embedded), and the only other system-ruby use was
+# a yaml->json one-liner in mdsave2 .circleci/deploy, now done with `yq` (below).
+# That's why build-essential + the -dev libs (which only existed to compile Ruby
+# from source) are gone too.
 RUN apt-get -y update \
   && apt-get install -y --no-install-recommends \
     gpg-agent \
@@ -16,32 +20,10 @@ RUN apt-get -y update \
     wget \
     jq \
     curl \
-    zlib1g-dev \
-    build-essential \
-    libssl-dev \
-    libreadline-dev \
-    libyaml-dev \
-    libsqlite3-dev \
-    sqlite3 \
-    libxml2-dev \
-    libxslt1-dev \
-    libcurl4-openssl-dev \
-    libffi-dev \
     unzip \
     less \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-
-# Install Ruby from source
-RUN curl -fsSL https://cache.ruby-lang.org/pub/ruby/3.4/ruby-${RUBY_VERSION}.tar.gz -o ruby.tar.gz \
-    && tar -xzf ruby.tar.gz \
-    && cd ruby-${RUBY_VERSION} \
-    && ./configure --disable-install-doc \
-    && make -j"$(nproc)" \
-    && make install \
-    && cd .. \
-    && rm -rf ruby* \
-    && gem update --system
 
 RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \
@@ -74,3 +56,8 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     && unzip awscliv2.zip \
     && ./aws/install \
     && rm -rf awscliv2.zip aws
+
+# install yq (static Go binary) — YAML->JSON processor that replaces the former
+# system-ruby one-liner in mdsave2 .circleci/deploy (`yq -o=json '.' <file>`)
+RUN wget -nv -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
+    && chmod +x /usr/local/bin/yq
