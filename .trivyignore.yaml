@@ -1,0 +1,132 @@
+# Accepted findings in third-party binaries that ship their Go dependencies
+# statically linked. There is no package to upgrade: verified 2026-08-17 that
+# apt reports Candidate == Installed for docker-ce-cli, docker-buildx-plugin
+# and docker-compose-plugin, and yq is fetched from releases/latest. Fixes
+# require the vendor to recompile and publish.
+#
+# These are suppressed so that NEW vendor findings stand out. To see everything
+# including these, run 'make trivy-unfixed' (it bypasses this file).
+#
+# On expiry: rebuild, re-run 'make trivy-unfixed', and drop any entry whose
+# upstream has shipped a fix.
+
+vulnerabilities:
+  - id: CVE-2026-33818
+    statement: stdlib - Go toolchain; vendor must recompile with a patched Go
+    expiredAt: 2026-11-17
+    paths:
+      - usr/bin/docker
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/local/bin/yq
+  - id: CVE-2026-33997
+    statement: github.com/docker/docker - Docker Inc.; no newer docker-ce-cli/plugin published
+    expiredAt: 2026-11-17
+    paths:
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/libexec/docker/cli-plugins/docker-compose
+  - id: CVE-2026-34040
+    statement: github.com/docker/docker - Docker Inc.; no newer docker-ce-cli/plugin published
+    expiredAt: 2026-11-17
+    paths:
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/libexec/docker/cli-plugins/docker-compose
+  - id: CVE-2026-39821
+    statement: stdlib - Go toolchain; vendor must recompile with a patched Go
+    expiredAt: 2026-11-17
+    paths:
+      - usr/bin/docker
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/local/bin/yq
+  - id: CVE-2026-39822
+    statement: stdlib - Go toolchain; vendor must recompile with a patched Go
+    expiredAt: 2026-11-17
+    paths:
+      - usr/local/bin/yq
+  - id: CVE-2026-41567
+    statement: github.com/docker/docker - Docker Inc.; no newer docker-ce-cli/plugin published
+    expiredAt: 2026-11-17
+    paths:
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/libexec/docker/cli-plugins/docker-compose
+  - id: CVE-2026-41568
+    statement: github.com/docker/docker - Docker Inc.; no newer docker-ce-cli/plugin published
+    expiredAt: 2026-11-17
+    paths:
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/libexec/docker/cli-plugins/docker-compose
+  - id: CVE-2026-42306
+    statement: github.com/docker/docker - Docker Inc.; no newer docker-ce-cli/plugin published
+    expiredAt: 2026-11-17
+    paths:
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/libexec/docker/cli-plugins/docker-compose
+  - id: CVE-2026-42505
+    statement: stdlib - Go toolchain; vendor must recompile with a patched Go
+    expiredAt: 2026-11-17
+    paths:
+      - usr/local/bin/yq
+  - id: CVE-2026-46600
+    statement: golang.org/x/net,stdlib - Go toolchain; vendor must recompile with a patched Go; vendor rebuild required
+    expiredAt: 2026-11-17
+    paths:
+      - usr/bin/docker
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/local/bin/yq
+  - id: CVE-2026-56852
+    statement: golang.org/x/text - vendor rebuild required
+    expiredAt: 2026-11-17
+    paths:
+      - usr/local/bin/yq
+  - id: CVE-2026-56853
+    statement: stdlib - Go toolchain; vendor must recompile with a patched Go
+    expiredAt: 2026-11-17
+    paths:
+      - usr/bin/docker
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/local/bin/yq
+  - id: CVE-2026-56858
+    statement: stdlib - Go toolchain; vendor must recompile with a patched Go
+    expiredAt: 2026-11-17
+    paths:
+      - usr/bin/docker
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/local/bin/yq
+  - id: CVE-2026-56859
+    statement: stdlib - Go toolchain; vendor must recompile with a patched Go
+    expiredAt: 2026-11-17
+    paths:
+      - usr/bin/docker
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/local/bin/yq
+  - id: CVE-2026-56860
+    statement: stdlib - Go toolchain; vendor must recompile with a patched Go
+    expiredAt: 2026-11-17
+    paths:
+      - usr/bin/docker
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/local/bin/yq
+  - id: CVE-2026-56862
+    statement: stdlib - Go toolchain; vendor must recompile with a patched Go
+    expiredAt: 2026-11-17
+    paths:
+      - usr/bin/docker
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/local/bin/yq
+  - id: CVE-2026-56864
+    statement: golang.org/x/mod - vendor rebuild required
+    expiredAt: 2026-11-17
+    paths:
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/libexec/docker/cli-plugins/docker-compose
+  - id: CVE-2026-56865
+    statement: golang.org/x/mod - vendor rebuild required
+    expiredAt: 2026-11-17
+    paths:
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/libexec/docker/cli-plugins/docker-compose
+  - id: GO-2026-5932
+    statement: golang.org/x/crypto - vendor rebuild required
+    expiredAt: 2026-11-17
+    paths:
+      - usr/libexec/docker/cli-plugins/docker-buildx
+      - usr/libexec/docker/cli-plugins/docker-compose

@@ -25,6 +25,11 @@ RUN apt-get -y update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+# optional, local-dev only: trust a corporate TLS-inspection proxy CA if present in the
+# build context (git-ignored, never present in CI) so builds work behind e.g. Zscaler
+COPY zscaler-root-ca.cr[t] /usr/local/share/ca-certificates/
+RUN [ -f /usr/local/share/ca-certificates/zscaler-root-ca.crt ] && update-ca-certificates || true
+
 RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
@@ -42,7 +47,7 @@ RUN apt-get -y update \
 # Install Aptible cli
 ENV URL="https://omnibus-aptible-toolbelt.s3.amazonaws.com/aptible/omnibus-aptible-toolbelt/latest/aptible-toolbelt_latest_ubuntu-1604_amd64.deb"
 RUN apt-get -y update \
-    && curl -o aptible-cli.deb "$URL" \
+    && curl -fL --retry 5 --retry-delay 2 --retry-all-errors -o aptible-cli.deb "$URL" \
     && dpkg -i aptible-cli.deb \
     && rm -f aptible-cli.deb
 
@@ -52,7 +57,8 @@ RUN wget https://github.com/stedolan/jq/releases/download/jq-1.8.0/jq-linux64 \
     && mv jq-linux64 $(which jq)
 
 # install aws cli
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+RUN curl -fL --retry 5 --retry-delay 2 --retry-all-errors \
+      "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install \
     && rm -rf awscliv2.zip aws

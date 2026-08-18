@@ -1,0 +1,36 @@
+{
+  "app": "pnpm exec ts-node --prefer-ts-exts bin/app.ts",
+  "watch": {
+    "include": ["**"],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "**/*.d.ts",
+      "**/*.js",
+      "tsconfig.json",
+      "package*.json",
+      "pnpm-lock.yaml",
+      "node_modules"
+    ]
+  },
+  "context": {
+    "account": "515909623945",
+    "region": "us-east-1",
+    "ecrRepoName": "circleci-base",
+    "ssoPermissionSet": "marketplace-admin",
+    "tags": {
+      "TEAM_OWNER_NAME": "CloudEng",
+      "TEAM_OWNER_EMAIL": "cloudeng@tendo.com",
+      "PRODUCT_OWNER_NAME": "CloudEng",
+      "PRODUCT_OWNER_EMAIL": "cloudeng@tendo.com",
+      "JIRA_PROJECT": "CLOUDENG",
+      "SLACK_CHANNEL": "platform-cloudeng",
+      "PRODUCT_NAME": "circleci-base",
+      "PRODUCT_REPO": "circleci-base"
+    },
+    "@aws-cdk/core:stackRelativeExports": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/core:target-partitions": ["aws"]
+  }
+}
