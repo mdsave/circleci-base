@@ -1,11 +1,37 @@
 #!/bin/bash
 set -e # Exit on any error
 
+IMAGE=public.ecr.aws/g8w4z0q4/circleci-base
+
 aws configure set aws_access_key_id $AWS_ACCESS_KEY
 aws configure set aws_secret_access_key $AWS_SECRET_KEY
 aws configure set region us-east-1
 
 aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
 
-docker build -t public.ecr.aws/g8w4z0q4/circleci-base:"$CIRCLE_BRANCH" .
-docker push public.ecr.aws/g8w4z0q4/circleci-base:"$CIRCLE_BRANCH"
+docker build -t "$IMAGE:$CIRCLE_BRANCH" .
+docker push "$IMAGE:$CIRCLE_BRANCH"
+
+# Aikido scan anchor.
+#
+# Aikido keys container findings by (image, tag) and mints fresh issue ids for
+# every tag, so any ignore/snooze applied to a version tag is lost the moment we
+# cut the next one — tag 2.3 still reports 195 open findings that were triaged
+# away on 2.4. `:current` is a single stable record that always equals the
+# shipping image, so suppressions persist across releases and a rebuild rescans
+# the same record instead of creating a new one.
+#
+# Nothing pins `:current` — it exists only so Aikido has one target to track.
+# Consumers keep pinning the version tag.
+#
+# The guard matters: this repo's CI has no branch filter, so every pushed branch
+# builds. Without it, pushing any branch would silently repoint the scan target
+# at an image nobody runs. Only the branch named in RELEASE may move it, and a
+# missing/unreadable RELEASE leaves `:current` untouched rather than clobbering it.
+RELEASE_BRANCH="$(cat RELEASE 2>/dev/null || true)"
+if [ -n "$RELEASE_BRANCH" ] && [ "$CIRCLE_BRANCH" = "$RELEASE_BRANCH" ]; then
+  docker tag  "$IMAGE:$CIRCLE_BRANCH" "$IMAGE:current"
+  docker push "$IMAGE:current"
+else
+  echo "Not the release branch ($CIRCLE_BRANCH != ${RELEASE_BRANCH:-<unset>}); leaving :current untouched."
+fi
