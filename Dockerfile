@@ -8,7 +8,14 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # a yaml->json one-liner in mdsave2 .circleci/deploy, now done with `yq` (below).
 # That's why build-essential + the -dev libs (which only existed to compile Ruby
 # from source) are gone too.
+#
+# Upgrade packages inherited from the ubuntu:24.04 base layer. Without this the
+# base image's own packages stay at whatever that layer shipped, which is where
+# every apt-level CVE in the Aikido scan of tag 2.3 came from (libc, tar, sqlite,
+# systemd, krb5, pam, ncurses, python3-*). `upgrade` (not `dist-upgrade`) keeps it
+# conservative: it bumps versions in place and holds back anything needing new deps.
 RUN apt-get -y update \
+  && apt-get -y upgrade \
   && apt-get install -y --no-install-recommends \
     gpg-agent \
     apt-transport-https \
