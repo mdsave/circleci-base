@@ -1,7 +1,23 @@
-FROM ailispaw/ubuntu-essential:14.04-nodoc
+FROM ubuntu:24.04
 
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# NOTE: no Ruby toolchain here. aptible-cli ships its own embedded Ruby (omnibus
+# .deb, /opt/aptible-toolbelt/embedded), and the only other system-ruby use was
+# a yaml->json one-liner in mdsave2 .circleci/deploy, now done with `yq` (below).
+# That's why build-essential + the -dev libs (which only existed to compile Ruby
+# from source) are gone too.
+#
+# Upgrade packages inherited from the ubuntu:24.04 base layer. Without this the
+# base image's own packages stay at whatever that layer shipped, which is where
+# every apt-level CVE in the Aikido scan of tag 2.3 came from (libc, tar, sqlite,
+# systemd, krb5, pam, ncurses, python3-*). `upgrade` (not `dist-upgrade`) keeps it
+# conservative: it bumps versions in place and holds back anything needing new deps.
 RUN apt-get -y update \
+  && apt-get -y upgrade \
   && apt-get install -y --no-install-recommends \
+    gpg-agent \
     apt-transport-https \
     ca-certificates \
     git \
@@ -11,18 +27,8 @@ RUN apt-get -y update \
     wget \
     jq \
     curl \
-    zlib1g-dev \
-    build-essential \
-    libssl-dev \
-    libreadline-dev \
-    libyaml-dev \
-    libsqlite3-dev \
-    sqlite3 \
-    libxml2-dev \
-    libxslt1-dev \
-    libcurl4-openssl-dev \
-    python-software-properties \
-    libffi-dev \ 
+    unzip \
+    less \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -32,21 +38,33 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable"
 
+# CI runs against a remote daemon (setup_remote_docker), so only the client +
+# buildx (for DOCKER_BUILDKIT builds with --secret/--cache-from) + the compose
+# v2 plugin (`docker compose`) are needed — not the full docker-ce engine.
 RUN apt-get -y update \
-  && apt-get install -y docker-ce \
+  && apt-get install -y docker-ce-cli docker-buildx-plugin docker-compose-plugin \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN wget -nv -O /usr/bin/docker-compose "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)"
-RUN chmod a+x /usr/bin/docker-compose
+# Install Aptible cli
+ENV URL="https://omnibus-aptible-toolbelt.s3.amazonaws.com/aptible/omnibus-aptible-toolbelt/latest/aptible-toolbelt_latest_ubuntu-1604_amd64.deb"
+RUN apt-get -y update \
+    && curl -o aptible-cli.deb "$URL" \
+    && dpkg -i aptible-cli.deb \
+    && rm -f aptible-cli.deb
 
-RUN wget http://ftp.ruby-lang.org/pub/ruby/2.4/ruby-2.4.0.tar.gz \
-  && tar -xzvf ruby-2.4.0.tar.gz \
-  && cd ruby-2.4.0/ \
-  && ./configure \
-  && make \
-  && make install \
-  && cd / \
-  && rm -rf ruby-2.4.0*
+# install jq 1.5
+RUN wget https://github.com/stedolan/jq/releases/download/jq-1.8.0/jq-linux64 \
+    && chmod +x jq-linux64 \
+    && mv jq-linux64 $(which jq)
 
-RUN gem install aptible-cli:0.14.0 tracker_api
+# install aws cli
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws
+
+# install yq (static Go binary) — YAML->JSON processor that replaces the former
+# system-ruby one-liner in mdsave2 .circleci/deploy (`yq -o=json '.' <file>`)
+RUN wget -nv -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
+    && chmod +x /usr/local/bin/yq
