@@ -2,17 +2,16 @@
 
 ## Author ↔ reviewer contract
 
-CodeRabbit owns line-level review: this is the **CI base image for the whole
-MDsave estate**, so review here is a supply-chain review — package pinning, key
-provenance, unchecksummed downloads, and base-image changes that propagate to
-every repo's CI at once. Humans own architecture, product fit, and risk.
-**Respond to every CodeRabbit comment** — a dismissal should say why, not be
-silent, since "not valid" is itself a signal that a rule needs tightening.
+CodeRabbit owns line-level review: this is the **CI base image the whole MDsave
+estate executes from**, so review here is a supply-chain review — pinning,
+key provenance, unchecksummed downloads, architecture assumptions, and the
+deploy scripts that push to ECR. Humans own architecture, product fit, and
+risk. **Respond to every CodeRabbit comment** — a dismissal should say why, not
+be silent, since "not valid" is itself a signal that a rule needs tightening.
 
-**There is no safety net in this repo.** No CI config, no test suite, no build
-script — the only verification a change gets is that the image builds, while
-the blast radius of a bad change is every CI job in the estate. Review
-accordingly.
+**There is no test suite.** CI builds the image and pushes it; nothing asserts
+the image works. So the only verification a change gets is that it builds,
+while the blast radius of a bad change is every CI job in the estate.
 
 ## Org-wide baseline rules (always present)
 
@@ -28,71 +27,77 @@ settings for these do not merge with a repo's own yaml (`inheritance` confirmed
 to have zero effect), so encoding them here is the only way they survive on a
 repo with its own config. Never omit this section.
 
-A build image is a plausible place for a credential to be baked into a layer,
-so the secrets rule is not idle here even though the repo stores no data.
+The `.circleci/` scripts hold credentials that can push to ECR, so the secrets
+rule is not idle here.
 
 ## Hard rules
 
-Every example below is from the Dockerfile as it stands today, not invented.
+Every example below is from the tree as it stands after the `2.4` merge.
 
-**Pin what is load-bearing.** An unpinned install means the image changes
-silently on whatever day it is next rebuilt.
-- Bad: `RUN apt-get install -y docker-ce` — the Docker version in the CI image is whatever upstream serves that day
-- Good: `RUN apt-get install -y docker-ce=<pinned version>`
+**Pin what is fetched.** An artifact resolved at build time changes the image
+on whatever day it is next rebuilt.
+- Bad (all three live today): `ENV URL=".../aptible/omnibus-aptible-toolbelt/latest/aptible-toolbelt_latest_ubuntu-1604_amd64.deb"`; `wget -nv -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64`; `curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"`
+- Good (live): `wget https://github.com/stedolan/jq/releases/download/jq-1.8.0/jq-linux64` — an exact release tag
+
+**Verify what is downloaded.** None of the four fetches above checks a checksum
+or signature. This is the standing state — raise it when a PR *touches* one of
+those lines or adds a fifth, not on every unrelated diff.
+- Bad: a new `wget`/`curl` of an executable, then straight to `chmod +x`
+- Good: a pinned URL plus a verified `sha256sum -c` before `chmod +x`
 
 **Keys go in `/etc/apt/keyrings`, not the global trusted set.** `apt-key add`
 is deprecated, and a key added that way can sign packages from *any* configured
 repo, not just the one it was added for.
-- Bad: `RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -`
-- Good: `RUN wget -qO /etc/apt/keyrings/docker.asc https://download.docker.com/linux/ubuntu/gpg` plus `signed-by=/etc/apt/keyrings/docker.asc` on the sources entry
+- Bad (live at line 35): `RUN wget -qO - https://download.docker.com/linux/ubuntu/gpg | apt-key add -`
+- Good: write the key to `/etc/apt/keyrings/docker.asc` and add `signed-by=/etc/apt/keyrings/docker.asc` to the sources entry
 
-**A fetched executable needs a pinned version, ideally a checksum.** The
-existing `docker-compose` fetch is the pattern to keep — pinned — not the
-version to copy; 1.11.2 is ancient.
-- Bad: `RUN wget -nv -O /usr/bin/foo "https://example.com/foo/latest/foo-$(uname -s)-$(uname -m)"`
-- Good: a pinned tag plus a verified `sha256sum` before `chmod +x`
+**Pin load-bearing apt packages.** The Docker client in CI currently moves with
+upstream on every rebuild.
+- Bad (live): `apt-get install -y docker-ce-cli docker-buildx-plugin docker-compose-plugin`
+- Good: the same three with exact `=<version>` constraints
 
-**No trailing space after a line-continuation backslash.** It turns the
-continuation into an empty line instead of a join, and it fails silently.
-Below, `␠` stands for one literal trailing space — in the real file it is
-invisible, which is exactly why this defect survives review.
-- Bad: `    libffi-dev \␠` — live at line 25 today
-- Good: `    libffi-dev \`
-- Find them all with: `grep -nE '\\[[:space:]]+$' Dockerfile`
+**Single-architecture assumptions are a real constraint, not an oversight to
+"fix" silently.** `x86_64`/`amd64` is hardcoded for the AWS CLI, `yq` and the
+aptible deb — and changing where this image can build is not a local decision.
+- Bad: adding a fourth `amd64`-only fetch without saying so
+- Good: call it out in the PR description, or parameterise on `$(dpkg --print-architecture)`
 
-**A base-image bump is a breaking change, not a chore.** The current base
-(`ailispaw/ubuntu-essential:14.04-nodoc`) is long EOL, so bumping is
-*desirable* — but it changes the toolchain under every downstream CI job.
-- Bad: base image bumped in a PR titled "cleanup", no mention in the description
-- Good: the bump is the PR's stated purpose, with the downstream impact named and a plan for which repos verify first
+**A base-image bump is the PR's purpose, never a side effect.** It changes the
+toolchain under every downstream CI job.
+- Bad: base bumped in a PR titled "cleanup", unmentioned in the description
+- Good: the bump is the stated purpose, with downstream impact named — as the `2.4` merge did when it moved to `ubuntu:24.04`
 
-**`dev/init` and `Vagrantfile` must not drift from the Dockerfile.** They are
-the local entry points, nothing in this repo exercises them, so drift surfaces
-only when someone next builds locally.
-- Bad: a package added to the `Dockerfile` and not to `dev/init`, or vice versa
-- Good: both updated in the same commit, or a comment saying why only one applies
+**Comments must not outlive the code beside them.**
+- Bad (live): `# install jq 1.5` sitting above a fetch of `jq-1.8.0`
+- Good: the comment names the version actually fetched, or names none
+
+**`:current` is the Aikido scan anchor and stays gated on the release branch.**
+- Bad: publishing `:current` unconditionally, which would point the security scan at an arbitrary branch's image
+- Good (live in `.circleci/deploy`): `if [ -n "$RELEASE_BRANCH" ] && [ "$CIRCLE_BRANCH" = "$RELEASE_BRANCH" ]` before the `docker tag`/`docker push`
 
 ## Known, explicitly out of scope
 
-- **"The branch name IS the image tag" does not apply to this repo the way it
-  does to `regression-testing`.** The estate-wide warning is that CI replaces
-  `/` with `-` when deriving an image tag, so `story/FEAT-1/MDS-2` and
-  `story/FEAT-1-MDS-2` collide on one tag. Here, `master` carries **no CI at
-  all**; the only `.circleci/deploy` lives on the old release branches
-  `2.1`–`2.4`, and it tags with the raw `$CIRCLE_BRANCH` and no sanitisation —
-  so a branch containing `/` would simply fail the tag/push (Docker disallows
-  `/` in a tag component) rather than silently colliding. Do not encode a
-  `path_instructions` rule for a collision that cannot happen here.
+- **The estate-wide "branch name IS the image tag" collision does not apply
+  here — but a different failure of the same family does.** The `regression-testing`
+  warning is that CI replaces `/` with `-` when deriving a tag, so
+  `story/FEAT-1/MDS-2` and `story/FEAT-1-MDS-2` collide on one tag. Here,
+  `.circleci/deploy` tags with the **raw** `$CIRCLE_BRANCH`
+  (`docker build -t "$IMAGE:$CIRCLE_BRANCH"`) and performs **no sanitisation at
+  all**, and the workflow carries no branch filter. A Docker tag component
+  cannot contain `/`, so a `type/slug` branch name cannot produce a valid tag
+  here — it would fail rather than collide.
 
-  *Evidence note:* the `master` half of this (no CI config, `.github` holding
-  only CODEOWNERS) was verified directly. The release-branch detail comes from
-  a read of branches `2.1`–`2.4` and has not been independently re-read since —
-  re-check it before relying on it for anything load-bearing.
+  *Evidence note:* that is a **static** reading of `.circleci/deploy` and
+  `.circleci/config.yml`. It has **not** been confirmed dynamically — CircleCI
+  posts no status check on pull requests in this repo (the only check on PR #5
+  is CodeRabbit's), so whether the job actually runs for a given branch could
+  not be observed from the PR. Confirm against a real CircleCI run before
+  treating it as settled.
 
-- **The EOL base image is known, not a finding to re-raise every PR.**
-  `ubuntu-essential:14.04-nodoc`, `python-software-properties` and
-  docker-compose 1.11.2 are all stale. That is understood; flag them when a PR
-  *touches* them, don't re-report the standing state on every unrelated diff.
+- **The standing unpinned/unchecksummed fetches are known.** The three
+  build-time-resolved artifacts and the absence of any checksum are recorded
+  above as rules to apply when a PR touches them — not as findings to re-raise
+  on every unrelated diff.
 
 ## Calibration status
 
@@ -112,7 +117,7 @@ finding alone, however severe. Current check modes:
 | `description` | `warning` |
 | `docstrings` | `off` |
 
-`master`'s actual branch protection, read from the API on 2026-09-10:
+`master`'s branch protection, read from the API on 2026-09-10:
 
 | setting | value |
 |---|---|
@@ -121,17 +126,18 @@ finding alone, however severe. Current check modes:
 | require conversation resolution | **false** |
 | required status checks | **none — the contexts list is empty** |
 
-Two consequences worth stating plainly. Conversation resolution is *off*, so an
-unresolved CodeRabbit thread does not hold the merge. And because the required
-status-checks list is **empty**, flipping a CodeRabbit check to `error` mode
-would not gate anything on its own — the check has to be *added to required
-status checks* as well. That is a repo-settings change, not a `.coderabbit.yaml`
-change, and it is the actual prerequisite for the flip.
+Two consequences. Conversation resolution is off, so an unresolved CodeRabbit
+thread does not hold the merge. And because the required status-checks list is
+**empty**, flipping a CodeRabbit check to `error` would not gate anything on its
+own — the check must also be *added to required status checks*. That is a
+repo-settings change, not a `.coderabbit.yaml` change, and it is the real
+prerequisite for the flip.
 
 On the current Pro plan, `custom_checks` are capped at 0 and never execute as
-their own named check. The supply-chain rules above would have been a natural
-custom check; they were mined into the `Dockerfile` `path_instructions` entry
-instead, not left as a non-functional `custom_checks` block.
+their own named check. The supply-chain rules above would have been the natural
+custom check; they were mined into the `Dockerfile` and `.circleci/**`
+`path_instructions` entries instead, not left as a non-functional
+`custom_checks` block.
 
 The remaining flip, once the checks above have a clean run of low false
 positives: add the chosen check to `master`'s required status checks, set

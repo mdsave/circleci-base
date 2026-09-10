@@ -3,17 +3,16 @@
 # Hand edits are fine; this marker just lets --refresh know it can propose
 # changes here instead of treating the file as someone else's hand-authored config.
 #
-# Bootstrap mode: this repo ships no CLAUDE.md, no AGENTS.md, no docs/ and no
-# README on `master`, so nothing here was mined from documented conventions.
-# The two per-repo rules below are grounded in the Dockerfile itself, read
-# directly - see REVIEW.md for what was read and why.
+# Bootstrap mode: this repo ships no CLAUDE.md, no AGENTS.md and no docs/, so
+# nothing here was mined from documented conventions. Every per-repo rule below
+# is grounded in the Dockerfile and .circleci/ scripts, read directly against
+# the tree this branch is merged with - see REVIEW.md for the evidence.
 #
-# What this repo actually is: the CI base image for the MDsave estate. It ships
-# a Dockerfile plus a local dev entry point, and - the part that matters for
-# review - NO CI config, NO test suite and NO build script, so the only
-# verification a change here gets is that the image builds.
-# That, plus the blast radius (every repo's CI executes from this image), is why
-# the Dockerfile rule below is worth more than a stack of generic lint rules.
+# What this repo is: the CI base image the whole MDsave estate executes from.
+# A change here propagates to every repo's CI at once, and there is no test
+# suite - the only verification a change gets is that the image builds and
+# pushes. That blast radius is why the rules below are weighted toward supply
+# chain (pinning, provenance, checksums) rather than style.
 
 language: 'en-US'
 early_access: false
@@ -30,7 +29,7 @@ reviews:
   suggested_reviewers: true
   pre_merge_checks:
     docstrings:
-      mode: 'off'                   # a Dockerfile and one shell script; nothing to docstring
+      mode: 'off'                   # a Dockerfile and four shell scripts; nothing to docstring
     title:
       mode: 'warning'
     description:
@@ -57,43 +56,68 @@ reviews:
         or password - including test fixtures, config files, and comments -
         reinforcing (not replacing) the automated gitleaks scan.
 
-    # --- Per-repo, grounded in the Dockerfile as it stands today ---
+    # --- Per-repo, grounded in the tree as it stands after the 2.4 merge ---
 
     - path: 'Dockerfile'
       instructions: |
-        This image is the CI base for the whole MDsave estate - every repo's CI
-        jobs execute inside it - so a change here propagates everywhere at once
-        and there is no test suite in this repo to catch a regression. Review it
-        as a supply-chain change, not a config tweak.
+        Every repo's CI executes inside this image and there is no test suite
+        here, so review this as a supply-chain change rather than a config
+        tweak.
 
         Flag, with reasons:
-        - A package installed without a version pin where the install is
-          load-bearing. `docker-ce` is currently unpinned, so the image's Docker
-          version changes silently with whatever the upstream repo serves on
-          rebuild day.
-        - `apt-key add` for a new key. It is deprecated and adds the key to the
-          global trusted set, so that key can then sign ANY package from ANY
-          configured repo. New keys belong in /etc/apt/keyrings with a
-          `signed-by=` on the corresponding sources entry.
-        - A new `wget`/`curl` fetch of an executable with no checksum and no
-          pinned version - the existing `docker-compose` fetch pins 1.11.2,
-          which is the pattern to keep (pinned), not the version to copy.
-        - A trailing space after a line-continuation backslash. There is one
-          today at line 25 (`libffi-dev \ `); it makes the continuation an
-          empty line rather than a join, and the failure is silent.
-        - A base-image bump. The current base is EOL (Ubuntu 14.04), so a bump
-          is desirable, but it is a breaking change for every downstream CI job
-          and must be called out in the PR description rather than slipped in.
+        - A fetched artifact resolved at BUILD TIME rather than pinned. Three
+          are live today and drift on every rebuild: the aptible-toolbelt deb
+          (its URL contains `latest`), `yq` (from
+          `releases/latest/download/`), and the AWS CLI v2 zip (that URL is
+          always current). `jq` shows the shape to prefer - it pins an exact
+          release tag. A new unpinned fetch should be justified in the PR, not
+          slipped in.
+        - A download with no integrity check. NONE of the four fetches above
+          verifies a checksum or signature. That is the standing state, so
+          raise it when a PR touches one of those lines or adds a fifth - do
+          not re-report it on every unrelated diff.
+        - `apt-key add` for a new key (live at line 35). It is deprecated and
+          adds the key to the GLOBAL trusted set, so that key can then sign
+          any package from any configured repo. New keys belong in
+          /etc/apt/keyrings with a `signed-by=` on the matching sources entry.
+        - An unpinned `apt-get install` of something load-bearing. The Docker
+          packages (`docker-ce-cli`, `docker-buildx-plugin`,
+          `docker-compose-plugin`) are unpinned today, so the Docker client in
+          CI moves with whatever upstream serves on rebuild day.
+        - A new single-architecture assumption. `x86_64`/`amd64` is hardcoded
+          for the AWS CLI, `yq` and the aptible deb. That is a real constraint
+          on where this image can build, and changing it is not a local
+          decision.
+        - A base-image bump. It is not a chore: it changes the toolchain under
+          every downstream CI job and belongs in the PR description as the
+          stated purpose.
+        - A comment that no longer matches the code beside it. Live example:
+          the `# install jq 1.5` comment sits above a fetch of jq 1.8.0.
+
+    - path: '.circleci/**'
+      instructions: |
+        - `deploy` tags the image with the RAW branch name
+          (`docker build -t "$IMAGE:$CIRCLE_BRANCH"`), and the workflow carries
+          no branch filter, so every branch that runs CI publishes a tag. A
+          Docker tag component cannot contain `/`, so a `type/slug` branch name
+          cannot produce a valid tag here. Flag any change that widens what
+          runs this job, or that derives a tag from a branch name without
+          sanitising it.
+        - The `:current` tag is the Aikido scan anchor and is published ONLY
+          when `$CIRCLE_BRANCH` equals `$RELEASE_BRANCH` (read from `RELEASE`).
+          Flag any change that moves `:current` off that gate - it would point
+          the security scan at an arbitrary branch's image.
+        - These scripts run with credentials that can push to ECR. Treat an
+          added network call, an added `eval`, or a widened IAM assumption as
+          a security change, not plumbing.
 
     - path: '{dev/init,Vagrantfile}'
       instructions: |
-        These are the local development entry points for the image, and they
-        are the only executable code here besides the Dockerfile. Nothing in
-        this repo runs them in CI, so a mistake surfaces only when someone next
-        builds locally. Flag unquoted variable expansions, missing error
-        handling on a command whose failure should stop the script, and any
-        divergence from what the Dockerfile actually installs - the two drifting
-        apart is the failure mode that wastes an afternoon.
+        The local development entry points. Nothing in CI exercises them, so a
+        mistake surfaces only when someone next builds locally. Flag unquoted
+        variable expansions, missing error handling where a failure should stop
+        the script, and drift from what the Dockerfile actually installs - the
+        two falling out of step is the failure mode that wastes an afternoon.
 
   auto_review:
     enabled: true
@@ -102,11 +126,11 @@ reviews:
     gitleaks:
       enabled: true                 # never suppressed by chill profile; keep explicit anyway
     hadolint:
-      enabled: true                 # the Dockerfile IS this repo; it needs no repo config to be
-                                    # meaningful, so its presence is the evidence (stack-tool-map.md)
-    # No `circleci` and no `actionlint`: despite the repo's name, `master` carries
-    # NO .circleci/config.yml, and .github holds only CODEOWNERS - no workflows.
-    # Enabling either would be reviewing a tool this repo does not run.
+      enabled: true                 # the Dockerfile is this repo's whole point; needs no repo
+                                    # config to be meaningful, so presence is the evidence
+    circleci:
+      enabled: true                 # .circleci/config.yml arrived on master with the 2.4 merge
+    # No `actionlint`: .github holds only CODEOWNERS, no workflows.
 
 chat:
   auto_reply: true
@@ -118,14 +142,13 @@ knowledge_base:
     approval_delay: 7
   jira:
     usage: 'enabled'
-    project_keys: []                # deliberately empty: exactly ONE MDS-NNNN reference exists
-                                    # across every branch, PR and commit in this repo
-                                    # (MDS-20319-upgrade-aptible-cli), which is below the
-                                    # >=2-occurrence threshold. Add 'MDS' once a second real
-                                    # reference appears - do not pre-populate it on the grounds
-                                    # that MDS is the org's usual key.
+    project_keys: []                # deliberately empty: only ONE MDS-NNNN reference exists
+                                    # across this repo's branches, PRs and commits, below the
+                                    # >=2-occurrence threshold. Add 'MDS' when a second real
+                                    # reference appears - not pre-populated on the grounds that
+                                    # MDS is the org's usual key.
 
-# No `path_filters`. There is nothing generated, vendored or compiled in this
-# repo, and `.gitignore` covers only `.vagrant`, which is never committed. A
-# speculative exclusion would only risk disabling secret scanning on a path
-# that does not exist.
+# No `path_filters`. Nothing here is generated, vendored or compiled, and
+# `.gitignore` covers only `.vagrant`, which is never committed. A speculative
+# exclusion would only risk disabling secret scanning on a path that does not
+# exist.
