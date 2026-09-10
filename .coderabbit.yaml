@@ -8,10 +8,10 @@
 # The two per-repo rules below are grounded in the Dockerfile itself, read
 # directly - see REVIEW.md for what was read and why.
 #
-# What this repo actually is: the CI base image for the MDsave estate. `master`
-# holds a Dockerfile, a Vagrantfile, dev/init and .github/CODEOWNERS - and
-# NOTHING else. There is no CI config, no test suite and no build script on
-# master, so the only verification a change here gets is that the image builds.
+# What this repo actually is: the CI base image for the MDsave estate. It ships
+# a Dockerfile plus a local dev entry point, and - the part that matters for
+# review - NO CI config, NO test suite and NO build script, so the only
+# verification a change here gets is that the image builds.
 # That, plus the blast radius (every repo's CI executes from this image), is why
 # the Dockerfile rule below is worth more than a stack of generic lint rules.
 
@@ -126,6 +126,6 @@ knowledge_base:
                                     # that MDS is the org's usual key.
 
 # No `path_filters`. There is nothing generated, vendored or compiled in this
-# repo - `master` is four files plus `.gitignore` (which ignores only `.vagrant`,
-# never committed). A speculative exclusion would only risk disabling secret
-# scanning on a path that does not exist.
+# repo, and `.gitignore` covers only `.vagrant`, which is never committed. A
+# speculative exclusion would only risk disabling secret scanning on a path
+# that does not exist.

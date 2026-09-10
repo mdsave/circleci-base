@@ -9,9 +9,8 @@ every repo's CI at once. Humans own architecture, product fit, and risk.
 **Respond to every CodeRabbit comment** — a dismissal should say why, not be
 silent, since "not valid" is itself a signal that a rule needs tightening.
 
-**There is no safety net in this repo.** `master` holds a `Dockerfile`, a
-`Vagrantfile`, `dev/init` and `.github/CODEOWNERS` — no CI config, no tests, no
-build script. The only verification a change gets is that the image builds, and
+**There is no safety net in this repo.** No CI config, no test suite, no build
+script — the only verification a change gets is that the image builds, while
 the blast radius of a bad change is every CI job in the estate. Review
 accordingly.
 
@@ -55,8 +54,11 @@ version to copy; 1.11.2 is ancient.
 
 **No trailing space after a line-continuation backslash.** It turns the
 continuation into an empty line instead of a join, and it fails silently.
-- Bad: `    libffi-dev \ ` — this is live at line 25 today
+Below, `␠` stands for one literal trailing space — in the real file it is
+invisible, which is exactly why this defect survives review.
+- Bad: `    libffi-dev \␠` — live at line 25 today
 - Good: `    libffi-dev \`
+- Find them all with: `grep -nE '\\[[:space:]]+$' Dockerfile`
 
 **A base-image bump is a breaking change, not a chore.** The current base
 (`ailispaw/ubuntu-essential:14.04-nodoc`) is long EOL, so bumping is
